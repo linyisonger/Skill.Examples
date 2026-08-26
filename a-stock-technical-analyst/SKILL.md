@@ -130,7 +130,7 @@ mcp__westock-mcp__data_sector: {"mode":"ranking","type":"mainNetInflow","kind":"
 
 | 次序 | 工具 | 参数 | 用途 |
 |------|------|------|------|
-| 1 | `mcp__westock-mcp__data_market_overview` | `{"type":"all"}` | 大盘涨跌分布/技术评分/估值/风格轮动（聚合滞后 1 日，见 3.3，**不二次传 date 补取**） |
+| 1 | `mcp__westock-mcp__data_market_overview` | `{"type":"all"}` | 大盘涨跌分布/技术评分/估值/风格轮动（**以返回 `date` 字段为准**；盘后早段可能仍是上一交易日快照，约 19:00 后自动刷新为当日，见 3.3） |
 | 2 | `mcp__westock-mcp__data_sector` | `{"mode":"ranking","type":"changePct","kind":"industry","order":"desc","limit":20}` | 当日行业涨跌榜 |
 | 3 | `mcp__westock-mcp__data_quote` | `{"codes":"sh000001,sz399001,sz399006,sh510300,sh588000,sh512070,sh512800,sh512660"}` | 三大指数 + 5 只核心 ETF 实时快照（一次取 8 只） |
 | 4 | `mcp__westock-mcp__data_technical` | `{"codes":"sh510300,sh588000,sh512070,sh512800,sh512660","group":"kdj,macd"}` | 5 只 ETF 的 MACD/KDJ |
@@ -138,7 +138,7 @@ mcp__westock-mcp__data_sector: {"mode":"ranking","type":"mainNetInflow","kind":"
 **提速要点（务必遵守）**：
 
 - 以上 4 个调用**放在同一条消息里并行发出**，不要分批改。
-- **不要**为「今日盘面」二次调用 `data_market_overview` 并传 `date=当日`——网关滞后，仍回吐上一交易日，纯浪费一轮。
+- **以 `data_market_overview` 返回的 `date` 字段为准标注实际交易日**：盘后不久可能仍吐上一交易日聚合（约 19:00 前常为 T-1），之后自动刷新为当日；不要反复传 `date=当日` 重试，按实际返回日期标注时效即可。
 - **不要**单独拉 ETF 原始 `data_kline`：ETF 均线非必需（大盘均线取自 overview 聚合），MACD/KDJ 已由 `data_technical` 覆盖；确需 ETF 均线时再单独补 1 只。
 - 核心 ETF 固定 5 只（510300/588000/512070/512800/512660），不要默认拉满第四节 15 只清单。
 
